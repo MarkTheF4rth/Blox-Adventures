@@ -1,5 +1,3 @@
-#!/usr/bin/python3.5
-
 import pygame
 
 class Button(object):
@@ -31,7 +29,7 @@ class Button(object):
 
         font = pygame.font.SysFont(None, min(self.size))
         x_offset = ((self.rect[2]-font.size(self.label)[0])/2)
-        y_offset = (self.rect[3]/4)
+        y_offset = (self.rect[3]/6)
         normal_text = font.render(self.label, True, self.colours['normal'])
         active_text = font.render(self.label, True, self.colours['active'])
         inactive_text = font.render(self.label, True, self.colours['inactive'])
