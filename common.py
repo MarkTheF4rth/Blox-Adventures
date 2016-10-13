@@ -1,17 +1,20 @@
 import pygame
 
 class Button(object):
-    def __init__(self, pos, size, label, images, status='normal'):
+    def __init__(self, pos, size, label, images, function=None, status='normal'):
         """initialises button object"""
         self.pos = pos
         self.size = size
         self.label = label
+        self.function = function
+        if not self.function:
+            self.function = label.lower()
         self.images = images
         self.status = status
         self.rect = pygame.Rect(self.pos[0], self.pos[1], self.size[0], self.size[1])
         self.colours = {
             'normal': (58, 45, 233),
-            'active': (255, 255, 255), 
+            'active': (255, 255, 255),
             'inactive': (0, 0, 0)}
         self.text_prep()
 
@@ -38,7 +41,7 @@ class Button(object):
 
         self.text['pos'] = (x_offset+self.pos[0], y_offset+self.pos[1])
         self.text['image'] = text_ref
-    
+
     def draw(self, screen):
         status_ref = {'normal':0, 'active':1, 'inactive':2}
         image = self.images[status_ref[self.status]]
@@ -47,11 +50,16 @@ class Button(object):
         screen.blit(self.text['image'][self.status], self.text['pos'])
         return screen
 
-class MainMenu(Button):
-    def __init__(self, first_play, screen):
-        self.image_init()
-        self.button_init(first_play, screen)
+    def run(self, events, screen):
+        output = None
+        self.mouse_hover(events.mouse_pos)
+        if events.mouse_click and self.status == 'active':
+            output = [self.function]
 
+        return output, self.draw(screen)
+ 
+
+class MenuTemplate:
     def image_init(self):
         imagedir = 'Images'
         normal = pygame.image.load(imagedir+"/button_normal.png")
@@ -59,50 +67,42 @@ class MainMenu(Button):
         inactive = pygame.image.load(imagedir+"/button_inactive.png")
         self.images = (normal, active, inactive)
 
-    def button_init(self, first_play, screen):
-        """initialises all the buttons that will be displayed on the screen"""
-        screen_size = screen.get_size()
-        uniform_size_y = int(1/4 * screen_size[1])  # Find the size that y should be relative to the screen size
-        uniform_size_x = int(uniform_size_y * 4)               # Create x value from that, ration 4:1 x:y
-        uniform_size = (uniform_size_x, uniform_size_y)  # Put them together in a tuple
-
-        x_pos = int((screen_size[0] - uniform_size_x)/2)
-        y_space = int(((screen_size[1])-(3*uniform_size_y))/4)
-
-        pos = (x_pos, y_space)
-
-        if first_play:
-            game_label = "Begin"
-        else:
-            game_label = "Continue"
-        self.game = Button(pos, uniform_size, game_label, self.images)
-        pos = (x_pos, pos[1]+y_space+uniform_size_y)
-        self.options = Button(pos, uniform_size, 'Options', self.images)
-        pos = (x_pos, pos[1]+y_space+uniform_size_y)
-        self.quit = Button(pos, uniform_size, 'Quit', self.images)
-        self.buttons = (self.game, self.options, self.quit)
-
-    def run(self, events, screen):
-        output = None
-        for button in self.buttons:
-            button.mouse_hover(events.mouse_pos)
-            screen = button.draw(screen)
-
-        if events.mouse_down[0]:
-            for button in self.buttons:
-                if button.status == 'active':
-                    output = button.label.lower()
-
-        return screen, output
+    def size_ref(self, fraction, screen_size, scale=4):
+        uniform_size_y = int(fraction * screen_size[1])
+        uniform_size_x = int(uniform_size_y*scale)
+        uniform_size = (uniform_size_x, uniform_size_y)
+        return uniform_size
 
 class Events(object):
     def __init__(self, mouse_pos):
         self.mouse_pos = mouse_pos
+        self.mouse_down = (0, 0, 0)
         self.current_event = None
+        self.timeout = 0
+        self.mouse_click = False
+
+    def click_timeout(self):
+        self.timeout = 25
+        self.mouse_click = False
+
+    def event_update(self):
+        if self.timeout == 0:
+            LMB_down = self.mouse_down[0]
+            self.mouse_click = False
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.handle_quit()
+                else:
+                    self.current_event = event
+            self.mouse_pos = pygame.mouse.get_pos()
+            self.mouse_down = pygame.mouse.get_pressed()
+            if not LMB_down and self.mouse_down[0]:
+                self.mouse_click = True
+        else:
+            self.timeout -= 1
 
 
-if __name__ == "__main__":
-
+def standard_menu_unit_test(module):
     WIDTH, HEIGHT = 1500, 900
 
     pygame.display.init()
@@ -113,7 +113,7 @@ if __name__ == "__main__":
 
     FULLSCREEN = False
     SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
-    MAINMENU = MainMenu(True, SCREEN)
+    MENU = module(SCREEN)
     EVENTS = Events(pygame.mouse.get_pos())
 
     RUN = True
@@ -126,15 +126,16 @@ if __name__ == "__main__":
                     SCREEN = pygame.display.set_mode((infoObject.current_w, infoObject.current_h), pygame.FULLSCREEN)
                 else:
                     SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
-                MAINMENU.button_init(True, SCREEN)
+                MENU.button_init(True, SCREEN)
                 FULLSCREEN = not FULLSCREEN
             else:
                 EVENTS.current_event = event
 
         EVENTS.mouse_pos = pygame.mouse.get_pos()
         EVENTS.mouse_down = pygame.mouse.get_pressed()
-        SCREEN, OUTPUT = MAINMENU.run(EVENTS, SCREEN)
+        SCREEN, OUTPUT = MENU.run(EVENTS, SCREEN)
         if OUTPUT == 'quit':
             RUN = False
         pygame.display.update()
     pygame.quit()
+
