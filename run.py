@@ -1,21 +1,23 @@
-import pygame, mainmenu, optionsmenu, time, common
+import pygame, mainmenu, optionsmenu, game, time, common, os
+from common import Initialiser
 
-class Run:
+class Run(Initialiser):
     def __init__(self, events):
         self.events = events
         self.screen_width = 1500
         self.screen_height = 900
         self.screen = pygame.display.set_mode((self.screen_width, self.screen_height))
         self.status = 'mainmenu'
-        self.fullscreen = False #PLACEHOLDER, NEED OPTIONS SHELF
-        self.volume = 100 # PLACEHOLDER FOR OPTIONS
-        self.original_volume = 100 #PLACEHOLDER FOR OPTIONS
-        self.status_types = ['mainmenu', 'options']
+        if not os.path.isfile('Config'):
+            self.config_initialise()
+        self.status_types = ['mainmenu', 'optionsmenu', 'game']
         self.initialise()
 
     def initialise(self):
-        self.mainmenu = mainmenu.MainMenu(self.screen) #PLACEHOLDER: FIRST PLAY NEEDS TO BE SET
-        self.options = optionsmenu.OptionMenu(self.volume, self.screen)
+        self.reader()
+        self.mainmenu = mainmenu.MainMenu(self.screen)
+        self.optionsmenu = optionsmenu.OptionMenu(self.screen)
+        self.game = game.Game(self.screen, current_level=1)
 
     def output_handler(self, output):
          if output[0] in self.status_types: 
@@ -24,7 +26,6 @@ class Run:
             self.events.click_timeout()
          else:
             getattr(self, 'handle_'+output[0])(*output[1:])
-       
 
     def main_loop(self):
         while self.status != 'quit':
@@ -36,20 +37,20 @@ class Run:
 
     def handle_fullscreen(self):
         info = pygame.display.Info()
-        if not self.fullscreen:
+        if not self.options['fullscreen']:
             self.screen = pygame.display.set_mode((info.current_w, info.current_h), pygame.FULLSCREEN)
-            self.fullscreen = True
+            self.options['fullscreen'] = True
         else:
             self.screen = pygame.display.set_mode((self.screen_width, self.screen_height))
-            self.fullscreen = False
+            self.options['fullscreen'] = False
         self.initialise()
 
     def handle_sound_toggle(self):
-        if self.volume > 0:
-            self.volume = 0
+        if self.options['volume'] > 0:
+            self.options['volume'] = 0
         else:
-            self.volume = self.original_volume
-        self.options.button_init(self.volume, self.screen)
+            self.options['volume'] = self.options['original_volume']
+        self.initialise()
 
     def handle_quit(self):
         self.status = 'quit'
