@@ -2,13 +2,10 @@ import pygame
 from itertools import chain
 from common import Button
 from common import MenuTemplate
+from common import Initialiser
 
-class MainMenu(MenuTemplate):
-    def __init__(self, screen, first_play=True):
-        self.image_init()
-        self.button_init(first_play, screen)
-
-    def button_init(self, first_play, screen):
+class MainMenu(MenuTemplate, Initialiser):
+    def button_init(self, screen):
         """initialises all the buttons that will be displayed on the screen"""
         screen_size = screen.get_size()
         uniform_size = self.size_ref(1/4.0, screen_size)
@@ -18,21 +15,22 @@ class MainMenu(MenuTemplate):
 
         pos = (x_pos, y_space)
 
-        if first_play:
+        if self.first_play:
             game_label = "Begin"
         else:
             game_label = "Continue"
-        self.game = Button(pos, uniform_size, game_label, self.images)
+        self.game = Button(pos, uniform_size, game_label, self.media, function='game')
         pos = (x_pos, pos[1]+y_space+uniform_size[1])
-        self.options = Button(pos, uniform_size, 'Options', self.images)
+        self.options = Button(pos, uniform_size, 'Options', self.media, function='optionsmenu')
         pos = (x_pos, pos[1]+y_space+uniform_size[1])
-        self.quit = Button(pos, uniform_size, 'Quit', self.images)
+        self.quit = Button(pos, uniform_size, 'Quit', self.media)
         self.buttons = (self.game, self.options, self.quit)
 
     def run(self, events, screen):
         output = list(chain(*[button.run(events, screen)[:-1] for button in self.buttons]))
 
         return screen, output
+
 
 if __name__ == "__main__":
     from common import standard_menu_unit_test
