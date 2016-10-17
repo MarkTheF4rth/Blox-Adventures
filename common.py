@@ -1,21 +1,19 @@
-import pygame
+import pygame, shelve, pickle
 
 class Button(object):
-    def __init__(self, pos, size, label, images, function=None, status='normal'):
+    def __init__(self, pos, size, label, media, function=None, status='normal'):
         """initialises button object"""
+        self.images = media.images
+        self.audio = media.audio
+        self.colours = media.colours
         self.pos = pos
         self.size = size
         self.label = label
         self.function = function
         if not self.function:
             self.function = label.lower()
-        self.images = images
         self.status = status
         self.rect = pygame.Rect(self.pos[0], self.pos[1], self.size[0], self.size[1])
-        self.colours = {
-            'normal': (58, 45, 233),
-            'active': (255, 255, 255),
-            'inactive': (0, 0, 0)}
         self.text_prep()
 
     def mouse_hover(self, mouse_pos):
@@ -60,12 +58,26 @@ class Button(object):
  
 
 class MenuTemplate:
+    def __init__(self, screen):
+        self.reader()
+        self.media = StorageObj()
+        self.image_init()
+        self.sound_init()
+        self.button_init(screen)
+
     def image_init(self):
-        imagedir = 'Images'
-        normal = pygame.image.load(imagedir+"/button_normal.png")
-        active = pygame.image.load(imagedir+"/button_active.png")
-        inactive = pygame.image.load(imagedir+"/button_inactive.png")
-        self.images = (normal, active, inactive)
+        normal = pygame.image.load(self.image_dir+"/button_normal.png")
+        active = pygame.image.load(self.image_dir+"/button_active.png")
+        inactive = pygame.image.load(self.image_dir+"/button_inactive.png")
+        self.media.images = (normal, active, inactive)
+        self.media.colours = {
+            'normal':(0, 0, 255),
+            'active':(255, 255, 255),
+            'inactive':(0, 0, 0)}
+
+
+    def sound_init(self):
+        self.media.audio = None
 
     def size_ref(self, fraction, screen_size, scale=4):
         uniform_size_y = int(fraction * screen_size[1])
@@ -101,6 +113,38 @@ class Events(object):
         else:
             self.timeout -= 1
 
+class Initialiser:
+    def config_initialise(self):
+        config = open('Config', 'w')
+        config.write('Format is: Option = <option>. order must be retained\n')
+        config.write('First Play = 1\n')
+        config.write('Image Directory = Images\n')
+        config.write('Music Directory = Music')
+        config.close()
+        options = shelve.open('options')
+        options['fullscreen'] = False
+        options['volume'] = 100
+        options['original_volume'] = 100
+
+    def reader(self):
+        config = open('Config', 'r')
+        config.readline()
+        self.first_play = int(config.readline().split('=')[1][1:].strip())
+        self.image_dir = config.readline().split('=')[1][1:].strip()
+        self.music_dir = config.readline().split('=')[1][1:].strip()
+        config.close()
+        self.options = shelve.open('options')
+
+    def level_init(self):
+        level1 = StorageObj()
+        level1.level = [['block1', 'block2', 'block1', 'block1'],
+                        ['block3', 'block2', 'block1', 'block3']]
+        level1.images = {'block1':'Images/button_normal.png',
+                         'block2':'Images/button_active.png',
+                         'block3':'Images/button_inactive.png'}
+
+        with open('Levels/level1.pkl', 'wb') as output:
+            pickle.dump(level1, output, pickle.HIGHEST_PROTOCOL)
 
 def standard_menu_unit_test(module):
     WIDTH, HEIGHT = 1500, 900
@@ -139,3 +183,5 @@ def standard_menu_unit_test(module):
         pygame.display.update()
     pygame.quit()
 
+class StorageObj:
+    pass
