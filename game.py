@@ -36,14 +36,47 @@ class Game:
     def load_level(self, num, screen):
         with open('Levels/level'+str(num)+'.pkl', 'rb') as input:
             self.current_level = pickle.load(input)
+        player_image = pygame.image.load('Images/player.png')
+        self.player = Player(player_image, (100,100,20,20))
         self.image_init(screen)
 
-    def run(self, events,  screen):
+    def run(self, events, screen):
+        screen.fill((0, 0, 0))
         self.display(screen)
+        self.player.run(screen, events)
         return screen, None
 
+class Player:
+    def __init__(self, image, rect):
+        self.rect = pygame.Rect(rect)
+        self.velocity = (0, 0)
+        self.image = pygame.transform.scale(image, rect[2:])
+
+    def movement(self, events):
+        if events.current_event.type == pygame.KEYDOWN:
+            if events.current_event.key == pygame.K_LEFT:
+                self.velocity = (-5, self.velocity[1])
+            elif events.current_event.key == pygame.K_RIGHT:
+                self.velocity = (5, self.velocity[1])
+        else:
+            self.velocity = (0, self.velocity[1])
+        self.rect = self.rect.move(self.velocity)
+
+    def run(self, screen, events):
+        self.movement(events)
+        screen.blit(self.image, self.rect)
+
+class Block:
+    def __init__(self, size):
+        self.rect = pygame.Rect((0, 0), size)
+
+class Air_Block(Block):
+    pass
+
+class Normal_Block(Block):
+    pass
+
 if __name__ == "__main__":
-    import pygame
     WIDTH, HEIGHT = 1500, 900
 
     INIT = Initialiser()
@@ -59,5 +92,5 @@ if __name__ == "__main__":
     GAME = Game(SCREEN, 1)
 
     while True:
-        GAME.display(SCREEN)
+        GAME.run(None, SCREEN)
         pygame.display.update()

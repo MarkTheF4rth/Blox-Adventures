@@ -139,7 +139,7 @@ class Initialiser:
         level1 = StorageObj()
         level1.level = [['block1', 'block2', 'block1', 'block1'],
                         ['block3', 'block2', 'block1', 'block3']]
-        level1.images = {'block1':'Images/button_normal.png',
+        level1.images = {'block1':'Images/emptyblock.png',
                          'block2':'Images/button_active.png',
                          'block3':'Images/button_inactive.png'}
 
