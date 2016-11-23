@@ -101,11 +101,13 @@ class Events(object):
         if self.timeout == 0:
             LMB_down = self.mouse_down[0]
             self.mouse_click = False
+            self.current_events = []
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.handle_quit()
                 else:
                     self.current_event = event
+                    self.current_events.append(event)
             self.mouse_pos = pygame.mouse.get_pos()
             self.mouse_down = pygame.mouse.get_pressed()
             if not LMB_down and self.mouse_down[0]:
@@ -119,7 +121,11 @@ class Initialiser:
         config.write('Format is: Option = <option>. order must be retained\n')
         config.write('First Play = 1\n')
         config.write('Image Directory = Images\n')
-        config.write('Music Directory = Music')
+        config.write('Music Directory = Music\n')
+        config.write('Gravity = 0.1\n')
+        config.write('Terminal = 5\n')
+        config.write('Jump = 5\n')
+        config.write('Speed = 0.25')
         config.close()
         options = shelve.open('options')
         options['fullscreen'] = False
@@ -132,16 +138,38 @@ class Initialiser:
         self.first_play = int(config.readline().split('=')[1][1:].strip())
         self.image_dir = config.readline().split('=')[1][1:].strip()
         self.music_dir = config.readline().split('=')[1][1:].strip()
+        self.config = StorageObj()
+        self.config.gravity = float(config.readline().split('=')[1][1:].strip())
+        self.config.terminal = int(config.readline().split('=')[1][1:].strip())
+        self.config.jump = int(config.readline().split('=')[1][1:].strip())
+        self.config.speed = float(config.readline().split('=')[1][1:].strip())
         config.close()
         self.options = shelve.open('options')
 
     def level_init(self):
+        from game import Air_Block
+        from game import Normal_Block
+        block1 = lambda : Air_Block('block1')
+        block2 = lambda : Normal_Block('block2')
+        block3 = lambda : Normal_Block('block3')
         level1 = StorageObj()
-        level1.level = [['block1', 'block2', 'block1', 'block1'],
-                        ['block3', 'block2', 'block1', 'block3']]
+        level1.level = [[block3(), block3(), block1(), block1(), block3()],
+                        [block3(), block1(), block1(), block3(), block3()],
+                        [block3(), block3(), block1(), block1(), block3()],
+                        [block3(), block1(), block1(), block3(), block3()],
+                        [block3(), block3(), block1(), block1(), block3()],
+                        [block3(), block1(), block1(), block3(), block3()],
+                        [block3(), block3(), block1(), block1(), block3()],
+                        [block3(), block1(), block1(), block3(), block3()],
+                        [block3(), block3(), block1(), block1(), block3()],
+                        [block3(), block1(), block1(), block3(), block3()],
+                        [block3(), block3(), block1(), block1(), block3()],
+                        [block3(), block1(), block1(), block3(), block3()],
+                        [block3(), block3(), block1(), block1(), block3()]]
         level1.images = {'block1':'Images/emptyblock.png',
                          'block2':'Images/button_active.png',
                          'block3':'Images/button_inactive.png'}
+        level1.spawn = (2,8)
 
         with open('Levels/level1.pkl', 'wb') as output:
             pickle.dump(level1, output, pickle.HIGHEST_PROTOCOL)

@@ -5,6 +5,8 @@ from common import Initialiser
 from common import StorageObj
 from game import Game
 
+from game import AirBlock
+
 class Block:
     def __init__(self, position, size):
         self.rect = pygame.Rect(position, size)
@@ -19,10 +21,14 @@ class Editor(Game):
         if self.current_level:
             self.load_level(current_level, screen)
         else:
+            print('Level not inputted, creating one')
             self.current_level = StorageObj()
+            block = lambda : AirBlocka
             row = ['empty']*9
+            self.current_level.spawn = (4, 4)
             self.current_level.level = [row]*9
             self.current_level.images = {'empty':'Images/emptyblock.png'}
+            self.load_level(self.screen,level=self.current_level)
             self.image_init(self.screen)
 
     def run(self):

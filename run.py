@@ -17,7 +17,7 @@ class Run(Initialiser):
         self.reader()
         self.mainmenu = mainmenu.MainMenu(self.screen)
         self.optionsmenu = optionsmenu.OptionMenu(self.screen)
-        self.game = game.Game(self.screen, current_level=1)
+        self.game = game.Game(self.screen, self.config, current_level=1)
 
     def output_handler(self, output):
          if output[0] in self.status_types: 
