@@ -1,11 +1,14 @@
 import pygame, shelve, pickle
 
 class Button(object):
-    def __init__(self, pos, size, label, media, function=None, status='normal'):
+    def __init__(self, pos, size, label, media=None, function=None, status='normal'):
         """initialises button object"""
-        self.images = media.images
-        self.audio = media.audio
-        self.colours = media.colours
+        if media:
+            self.images = media.images
+            self.audio = media.audio
+            self.colours = media.colours
+        else:
+            self.default_images()
         self.pos = pos
         self.size = size
         self.label = label
@@ -15,6 +18,18 @@ class Button(object):
         self.status = status
         self.rect = pygame.Rect(self.pos[0], self.pos[1], self.size[0], self.size[1])
         self.text_prep()
+
+    def default_images(self):
+        self.media = StorageObj()
+        self.image_dir = "Images"
+        normal = pygame.image.load(self.image_dir+"/button_normal.png")
+        active = pygame.image.load(self.image_dir+"/button_active.png")
+        inactive = pygame.image.load(self.image_dir+"/button_inactive.png")
+        self.images = (normal, active, inactive)
+        self.colours = {
+            'normal':(0, 0, 255),
+            'active':(255, 255, 255),
+            'inactive':(0, 0, 0)}
 
     def mouse_hover(self, mouse_pos):
         active = ['active', 'normal']
@@ -60,21 +75,7 @@ class Button(object):
 class MenuTemplate:
     def __init__(self, screen):
         self.reader()
-        self.media = StorageObj()
-        self.image_init()
-        self.sound_init()
         self.button_init(screen)
-
-    def image_init(self):
-        normal = pygame.image.load(self.image_dir+"/button_normal.png")
-        active = pygame.image.load(self.image_dir+"/button_active.png")
-        inactive = pygame.image.load(self.image_dir+"/button_inactive.png")
-        self.media.images = (normal, active, inactive)
-        self.media.colours = {
-            'normal':(0, 0, 255),
-            'active':(255, 255, 255),
-            'inactive':(0, 0, 0)}
-
 
     def sound_init(self):
         self.media.audio = None
@@ -145,34 +146,6 @@ class Initialiser:
         self.config.speed = float(config.readline().split('=')[1][1:].strip())
         config.close()
         self.options = shelve.open('options')
-
-    def level_init(self):
-        from game import Air_Block
-        from game import Normal_Block
-        block1 = lambda : Air_Block('block1')
-        block2 = lambda : Normal_Block('block2')
-        block3 = lambda : Normal_Block('block3')
-        level1 = StorageObj()
-        level1.level = [[block3(), block3(), block1(), block1(), block3()],
-                        [block3(), block1(), block1(), block3(), block3()],
-                        [block3(), block3(), block1(), block1(), block3()],
-                        [block3(), block1(), block1(), block3(), block3()],
-                        [block3(), block3(), block1(), block1(), block3()],
-                        [block3(), block1(), block1(), block3(), block3()],
-                        [block3(), block3(), block1(), block1(), block3()],
-                        [block3(), block1(), block1(), block3(), block3()],
-                        [block3(), block3(), block1(), block1(), block3()],
-                        [block3(), block1(), block1(), block3(), block3()],
-                        [block3(), block3(), block1(), block1(), block3()],
-                        [block3(), block1(), block1(), block3(), block3()],
-                        [block3(), block3(), block1(), block1(), block3()]]
-        level1.images = {'block1':'Images/emptyblock.png',
-                         'block2':'Images/button_active.png',
-                         'block3':'Images/button_inactive.png'}
-        level1.spawn = (2,8)
-
-        with open('Levels/level1.pkl', 'wb') as output:
-            pickle.dump(level1, output, pickle.HIGHEST_PROTOCOL)
 
 def standard_menu_unit_test(module):
     WIDTH, HEIGHT = 1500, 900

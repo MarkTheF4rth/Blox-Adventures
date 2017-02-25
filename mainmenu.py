@@ -19,11 +19,11 @@ class MainMenu(MenuTemplate, Initialiser):
             game_label = "Begin"
         else:
             game_label = "Continue"
-        self.game = Button(pos, uniform_size, game_label, self.media, function='game')
+        self.game = Button(pos, uniform_size, game_label, function='game')
         pos = (x_pos, pos[1]+y_space+uniform_size[1])
-        self.options = Button(pos, uniform_size, 'Options', self.media, function='optionsmenu')
+        self.options = Button(pos, uniform_size, 'Options', function='optionsmenu')
         pos = (x_pos, pos[1]+y_space+uniform_size[1])
-        self.quit = Button(pos, uniform_size, 'Quit', self.media)
+        self.quit = Button(pos, uniform_size, 'Quit')
         self.buttons = (self.game, self.options, self.quit)
 
     def run(self, events, screen):

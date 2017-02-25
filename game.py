@@ -66,14 +66,17 @@ class Game:
     def load_level(self, screen, level=None, num=None):
         if num:
             with open('Levels/level'+str(num)+'.pkl', 'rb') as input:
+                print('loading..')
                 self.current_level = pickle.load(input)
         else:
             self.current_level = level
+
         self.x_update = False
         self.y_update = False
         screen_x, screen_y = screen.get_size()
 
         player_pos = ((self.current_level.spawn[0]*self.scale*screen_x), (self.current_level.spawn[1]*self.scale*screen_y))
+        print(player_pos)
         player_image = pygame.image.load('Images/player.png')
 
         self.current_level.level_offset = self.centering(self.current_level.level, screen, True)
@@ -82,12 +85,19 @@ class Game:
         self.player = Player(self.config, player_image, self.current_level, player_pos, int(self.current_level.size/5))
 
     def run(self, events, screen):
+        output = None
         screen.fill((0, 0, 0))
         if self.x_update or self.y_update:
             self.current_level.level_offset = self.centering(self.current_level.level, screen)
         self.display(screen)
         self.player.run(screen, events, self.config, self.current_level.level_offset)
-        return screen, None
+
+        if events.current_event.type == pygame.KEYDOWN and events.current_event.key == pygame.K_ESCAPE:
+            output = [['prompt_menu', 'Exit to main menu?', {'Yes':'mainmenu', 'No':None}]]
+        elif self.player.win:
+            output = [['prompt_menu', 'You have won, what next?', {'Menu':'mainmenu', 'Next':'mainmenu'}]]
+
+        return screen, output
 
 class Player:
     def __init__(self, config, image, level, pos, size):
@@ -98,6 +108,7 @@ class Player:
         self.accelaration = (0, 0)
         self.terminal = config.terminal
         self.standing = False
+        self.win = False
         self.image = pygame.transform.scale(image, (size, size))
 
     def set_rect(self, pos, size):
@@ -107,6 +118,7 @@ class Player:
         self.accelaration = (self.accelaration[0], config.gravity)
         if events.current_event.type == pygame.KEYDOWN:
             for event in events.current_events:
+                print(event)
                 if event.key == pygame.K_LEFT:
                     self.accelaration = (-config.speed, self.accelaration[1])
                 elif event.key == pygame.K_RIGHT:
@@ -125,6 +137,8 @@ class Player:
         if output2 == 'standing':
             self.standing = True
             self.velocity = (self.velocity[0], 0)
+        if output1 == 'win' or output2 == 'win':
+            self.win = True
 
     def collision_detect(self, pos, direction):
         if direction == 'x':       y_point = pos[1]+(pos[3]/2)
@@ -184,6 +198,13 @@ class Normal_Block(Block):
         else:
             endpos = endpos.move((0, speed))
         return endpos, output
+
+class Win_Block(Block):
+    def x_collide(self, startpos, velocity):
+        return startpos, 'win'
+
+    def y_collide(self, startpos, velocity):
+        return startpos, 'win'
 
 if __name__ == "__main__":
     WIDTH, HEIGHT = 1500, 900

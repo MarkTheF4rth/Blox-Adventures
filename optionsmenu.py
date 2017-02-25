@@ -14,9 +14,9 @@ class OptionMenu(MenuTemplate, Initialiser):
         fullscreen_pos = (int(screen_size[0]*(1/20.0)), int(screen_size[1]*(1/3.0)))
         sound_pos = (int(screen_size[0]*(2/5.0)), int(screen_size[1]*1/20.0))
         
-        self.sound = Button(sound_pos, self.size_ref(1/8.0, screen_size, 2), sound, self.media, function='sound_toggle')
-        self.back = Button(back_pos, self.size_ref(1/8.0, screen_size), 'Back', self.media, function='mainmenu')
-        self.fullscreen = Button(fullscreen_pos, self.size_ref(1/8.0, screen_size), 'Fullscreen', self.media)
+        self.sound = Button(sound_pos, self.size_ref(1/8.0, screen_size, 2), sound, function='sound_toggle')
+        self.back = Button(back_pos, self.size_ref(1/8.0, screen_size), 'Back', function='mainmenu')
+        self.fullscreen = Button(fullscreen_pos, self.size_ref(1/8.0, screen_size), 'Fullscreen')
         self.buttons = (self.back, self.fullscreen, self.sound)
 
     def run(self, events, screen):

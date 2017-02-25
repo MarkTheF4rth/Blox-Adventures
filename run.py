@@ -1,5 +1,8 @@
 import pygame, mainmenu, optionsmenu, game, time, common, os
+from itertools import chain
 from common import Initialiser
+from common import StorageObj
+from common import Button
 
 class Run(Initialiser):
     def __init__(self, events):
@@ -8,6 +11,7 @@ class Run(Initialiser):
         self.screen_height = 900
         self.screen = pygame.display.set_mode((self.screen_width, self.screen_height))
         self.status = 'mainmenu'
+        self.prompt_obj = None
         if not os.path.isfile('Config'):
             self.config_initialise()
         self.status_types = ['mainmenu', 'optionsmenu', 'game']
@@ -20,20 +24,46 @@ class Run(Initialiser):
         self.game = game.Game(self.screen, self.config, current_level=1)
 
     def output_handler(self, output):
-         if output[0] in self.status_types: 
-            self.status = output[0]
-            self.screen.fill((0, 0,0))
-            self.events.click_timeout()
-         else:
-            getattr(self, 'handle_'+output[0])(*output[1:])
+        if output[0] in self.status_types: 
+           self.status = output[0]
+           self.screen.fill((0, 0,0))
+           self.events.click_timeout()
+        else:
+           getattr(self, 'handle_'+output[0])(*output[1:])
+
+    def run_prompt(self):
+        output = list(chain(*[button.run(self.events, self.screen)[:-1] for button in self.prompt_obj.buttons]))
+        for a in output:
+            if a:
+                if self.prompt_obj.behaviour[a[0]]:
+                    self.output_handler([self.prompt_obj.behaviour[a[0]]])
+                self.prompt_obj = None
 
     def main_loop(self):
         while self.status != 'quit':
             self.events.event_update()
-            self.screen, output = getattr(self, self.status).run(self.events, self.screen)
-            if output:
-                [self.output_handler(a) for a in output if a]
+            if not self.prompt_obj:
+                self.screen, output = getattr(self, self.status).run(self.events, self.screen)
+                if output:
+                    [self.output_handler(a) for a in output if a]
+            else:
+                self.run_prompt()
             pygame.display.update()
+
+    def handle_prompt_menu(self, text, options):
+        self.prompt_obj = StorageObj()
+        pygame.draw.rect(self.screen, (50, 50, 50), (100, 100, self.screen_width-200, self.screen_height-200))
+        x, y = 250, self.screen_height/2
+        x_interval = int((self.screen_width-500)/len(options))
+        self.prompt_obj.buttons = []
+        font = pygame.font.SysFont(None, 100)
+        text = font.render(text, True, (0, 0, 0))
+        self.screen.blit(text, (150, 150))
+        self.prompt_obj.behaviour = {}
+        for button_name, function in options.items():
+            self.prompt_obj.buttons.append(Button((x, y), (x_interval-50, 150), button_name))
+            self.prompt_obj.behaviour.update({button_name.lower():function})
+            x += x_interval
 
     def handle_fullscreen(self):
         info = pygame.display.Info()
